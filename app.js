@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const addTaskButton = document.getElementById('add-task');
   const searchInput = document.getElementById('search-bar');
   const darkModeToggle = document.getElementById('dark-mode-toggle');
+  const sortDeadlineButton = document.getElementById('sort-deadline');
+  const filterCompletedButton = document.getElementById('filter-completed');
+  const filterPendingButton = document.getElementById('filter-pending');
 
   // Load tasks from localStorage
   let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -126,6 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
       task.description.toLowerCase().includes(query)
     );
     renderTasks(filteredTasks);
+  });
+
+  // Sort by Deadline
+  sortDeadlineButton.addEventListener('click', () => {
+    const sortedTasks = [...tasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    renderTasks(sortedTasks);
+  });
+
+  // Show Completed Tasks
+  filterCompletedButton.addEventListener('click', () => {
+    const completedTasks = tasks.filter(task => task.completed);
+    renderTasks(completedTasks);
+  });
+
+  // Show Pending Tasks
+  filterPendingButton.addEventListener('click', () => {
+    const pendingTasks = tasks.filter(task => !task.completed);
+    renderTasks(pendingTasks);
   });
 
   // Dark mode toggle
