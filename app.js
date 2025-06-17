@@ -1,20 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
   const taskList = document.getElementById('task-list');
   const addTaskButton = document.getElementById('add-task');
-  const sortDeadlineButton = document.getElementById('sort-deadline');
-  const filterCompletedButton = document.getElementById('filter-completed');
-  const filterPendingButton = document.getElementById('filter-pending');
-  const searchBar = document.getElementById('search-bar');
+  const searchInput = document.getElementById('search-bar');
   const darkModeToggle = document.getElementById('dark-mode-toggle');
 
+  // Load tasks from localStorage
   let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  // Initialize dark mode
+  const isDarkMode = localStorage.getItem('darkMode') === 'true';
+  if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+  }
 
   function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }
 
   function renderTasks(filteredTasks = tasks) {
-    taskList.innerHTML = '';
+    taskList.innerHTML = ''; // Clear the task list before rendering
     filteredTasks.forEach((task, index) => {
       const li = document.createElement('li');
       li.className = `task-item ${task.completed ? 'completed' : ''}`;
@@ -47,38 +51,76 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   addTaskButton.addEventListener('click', () => {
-    const title = document.getElementById('task-title').value;
-    const description = document.getElementById('task-description').value;
+    const title = document.getElementById('task-title').value.trim();
+    const description = document.getElementById('task-description').value.trim();
     const deadline = document.getElementById('task-deadline').value;
     const priority = document.getElementById('task-priority').value;
-    const recurring = document.getElementById('recurring-task').checked;
 
     if (!title || !deadline) return alert('Please fill in all fields.');
 
-    tasks.push({ title, description, deadline, priority, completed: false, recurring });
+    // Add new task
+    const newTask = { title, description, deadline, priority, completed: false };
+    tasks.push(newTask);
     saveTasks();
     renderTasks();
+
+    // Schedule notifications for the new task
+    scheduleNotificationsForTask(newTask);
+
+    // Clear input fields
     document.getElementById('task-title').value = '';
     document.getElementById('task-description').value = '';
   });
 
-  sortDeadlineButton.addEventListener('click', () => {
-    const sortedTasks = [...tasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-    renderTasks(sortedTasks);
-  });
+  function scheduleNotificationsForTask(task) {
+    const now = new Date();
+    const deadline = new Date(task.deadline);
 
-  filterCompletedButton.addEventListener('click', () => {
-    const completedTasks = tasks.filter(task => task.completed);
-    renderTasks(completedTasks);
-  });
+    // Check if the deadline is within 3 days
+    const threeDaysBeforeDeadline = new Date(deadline);
+    threeDaysBeforeDeadline.setDate(threeDaysBeforeDeadline.getDate() - 3);
 
-  filterPendingButton.addEventListener('click', () => {
-    const pendingTasks = tasks.filter(task => !task.completed);
-    renderTasks(pendingTasks);
-  });
+    if (now < threeDaysBeforeDeadline) {
+      // Schedule a reminder every day starting 3 days before the deadline
+      const intervalId = setInterval(() => {
+        const today = new Date();
+        if (today >= threeDaysBeforeDeadline && today < deadline) {
+          showNotification(`Reminder: Task "${task.title}" is due in ${Math.ceil((deadline - today) / (1000 * 60 * 60 * 24))} days!`);
+        } else if (today >= deadline) {
+          showNotification(`Deadline Alert: Task "${task.title}" is overdue!`);
+          clearInterval(intervalId); // Stop reminders after the deadline
+        }
+      }, 24 * 60 * 60 * 1000); // Check once per day
+    } else if (now < deadline) {
+      // If less than 3 days left, send a single reminder
+      showNotification(`Reminder: Task "${task.title}" is due in ${Math.ceil((deadline - now) / (1000 * 60 * 60 * 24))} days!`);
+    }
+  }
 
-  searchBar.addEventListener('input', () => {
-    const query = searchBar.value.toLowerCase();
+  function showNotification(message) {
+    if (Notification.permission === 'granted') {
+      new Notification('Smart To-Do List', { body: message });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          new Notification('Smart To-Do List', { body: message });
+        }
+      });
+    }
+  }
+
+  // Periodically check for upcoming deadlines
+  setInterval(() => {
+    tasks.forEach(task => {
+      if (!task.completed) {
+        scheduleNotificationsForTask(task);
+      }
+    });
+  }, 60 * 60 * 1000); // Check every hour
+
+  // Search functionality
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
     const filteredTasks = tasks.filter(task =>
       task.title.toLowerCase().includes(query) ||
       task.description.toLowerCase().includes(query)
@@ -86,15 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTasks(filteredTasks);
   });
 
+  // Dark mode toggle
   darkModeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+    darkModeToggle.textContent = isDarkMode ? '☀️' : '🌙'; // Switch icon
   });
 
-  // Initialize dark mode from localStorage
-  if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-  }
-
+  // Initial render of tasks
   renderTasks();
 });
