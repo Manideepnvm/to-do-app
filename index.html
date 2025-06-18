@@ -16,13 +16,13 @@
     <div class="controls">
       <input type="text" id="task-title" placeholder="Task Title" required>
       <textarea id="task-description" placeholder="Task Description"></textarea>
-      <input type="date" id="task-deadline" required>
+      <input type="date" id="task-deadline-date" required>
+      <input type="time" id="task-deadline-time" required>
       <select id="task-priority">
         <option value="High">High</option>
         <option value="Medium">Medium</option>
         <option value="Low">Low</option>
       </select>
-      <label><input type="checkbox" id="recurring-task"> Recurring Task</label>
       <button id="add-task">Add Task</button>
     </div>
 
@@ -45,7 +45,6 @@
     }
   </script>
 
-  <!-- Include app.js -->
   <script src="app.js"></script>
 </body>
 </html>

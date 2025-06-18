@@ -2,10 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const taskList = document.getElementById('task-list');
   const addTaskButton = document.getElementById('add-task');
   const searchInput = document.getElementById('search-bar');
-  const darkModeToggle = document.getElementById('dark-mode-toggle');
   const sortDeadlineButton = document.getElementById('sort-deadline');
   const filterCompletedButton = document.getElementById('filter-completed');
   const filterPendingButton = document.getElementById('filter-pending');
+  const darkModeToggle = document.getElementById('dark-mode-toggle');
 
   // Load tasks from localStorage
   let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div>
           <strong>${task.title}</strong> (${task.priority})
           <p>${task.description}</p>
-          <small>Due: ${new Date(task.deadline).toLocaleDateString()}</small>
+          <small>Due: ${task.deadlineDate} at ${task.deadlineTime}</small>
         </div>
         <div>
           <button onclick="markComplete(${index})">${task.completed ? 'Undo' : 'Complete'}</button>
@@ -53,16 +53,42 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTasks();
   };
 
+  // Add Task Button Event Listener
   addTaskButton.addEventListener('click', () => {
-    const title = document.getElementById('task-title').value.trim();
-    const description = document.getElementById('task-description').value.trim();
-    const deadline = document.getElementById('task-deadline').value;
-    const priority = document.getElementById('task-priority').value;
+    const titleInput = document.getElementById('task-title');
+    const descriptionInput = document.getElementById('task-description');
+    const deadlineDateInput = document.getElementById('task-deadline-date');
+    const deadlineTimeInput = document.getElementById('task-deadline-time');
+    const priorityInput = document.getElementById('task-priority');
 
-    if (!title || !deadline) return alert('Please fill in all fields.');
+    // Validate inputs
+    if (!titleInput || !descriptionInput || !deadlineDateInput || !deadlineTimeInput || !priorityInput) {
+      console.error('One or more required elements are missing in the DOM.');
+      return alert('Error: Required fields are missing. Please check your HTML.');
+    }
+
+    const title = titleInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const deadlineDate = deadlineDateInput.value;
+    const deadlineTime = deadlineTimeInput.value;
+    const priority = priorityInput.value;
+
+    if (!title || !deadlineDate || !deadlineTime) {
+      return alert('Please fill in all fields.');
+    }
+
+    // Combine date and time into a single deadline
+    const deadline = new Date(`${deadlineDate}T${deadlineTime}`);
 
     // Add new task
-    const newTask = { title, description, deadline, priority, completed: false };
+    const newTask = {
+      title,
+      description,
+      deadlineDate,
+      deadlineTime,
+      priority,
+      completed: false,
+    };
     tasks.push(newTask);
     saveTasks();
     renderTasks();
@@ -71,13 +97,15 @@ document.addEventListener('DOMContentLoaded', () => {
     scheduleNotificationsForTask(newTask);
 
     // Clear input fields
-    document.getElementById('task-title').value = '';
-    document.getElementById('task-description').value = '';
+    titleInput.value = '';
+    descriptionInput.value = '';
+    deadlineDateInput.value = '';
+    deadlineTimeInput.value = '';
   });
 
   function scheduleNotificationsForTask(task) {
     const now = new Date();
-    const deadline = new Date(task.deadline);
+    const deadline = new Date(`${task.deadlineDate}T${task.deadlineTime}`);
 
     // Check if the deadline is within 3 days
     const threeDaysBeforeDeadline = new Date(deadline);
@@ -98,6 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // If less than 3 days left, send a single reminder
       showNotification(`Reminder: Task "${task.title}" is due in ${Math.ceil((deadline - now) / (1000 * 60 * 60 * 24))} days!`);
     }
+
+    // Schedule a notification for the exact deadline time
+    const timeUntilDeadline = deadline - now;
+    if (timeUntilDeadline > 0) {
+      setTimeout(() => {
+        showNotification(`Deadline Alert: Task "${task.title}" is due now!`);
+      }, timeUntilDeadline);
+    }
   }
 
   function showNotification(message) {
@@ -112,28 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Periodically check for upcoming deadlines
-  setInterval(() => {
-    tasks.forEach(task => {
-      if (!task.completed) {
-        scheduleNotificationsForTask(task);
-      }
-    });
-  }, 60 * 60 * 1000); // Check every hour
-
-  // Search functionality
-  searchInput.addEventListener('input', () => {
-    const query = searchInput.value.toLowerCase();
-    const filteredTasks = tasks.filter(task =>
-      task.title.toLowerCase().includes(query) ||
-      task.description.toLowerCase().includes(query)
-    );
-    renderTasks(filteredTasks);
-  });
-
   // Sort by Deadline
   sortDeadlineButton.addEventListener('click', () => {
-    const sortedTasks = [...tasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const aDeadline = new Date(`${a.deadlineDate}T${a.deadlineTime}`);
+      const bDeadline = new Date(`${b.deadlineDate}T${b.deadlineTime}`);
+      return aDeadline - bDeadline;
+    });
     renderTasks(sortedTasks);
   });
 
@@ -147,6 +168,16 @@ document.addEventListener('DOMContentLoaded', () => {
   filterPendingButton.addEventListener('click', () => {
     const pendingTasks = tasks.filter(task => !task.completed);
     renderTasks(pendingTasks);
+  });
+
+  // Search functionality
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    const filteredTasks = tasks.filter(task =>
+      task.title.toLowerCase().includes(query) ||
+      task.description.toLowerCase().includes(query)
+    );
+    renderTasks(filteredTasks);
   });
 
   // Dark mode toggle
