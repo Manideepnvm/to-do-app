@@ -3,48 +3,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Professional Smart To-Do List Application">
   <title>Smart To-Do List</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Smart To-Do List</h1>
-      <button id="dark-mode-toggle">🌙</button>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <h1 class="app-title">
+            <span class="title-icon">✓</span>
+            Smart To-Do List
+          </h1>
+          <p class="app-subtitle">Stay organized, stay productive</p>
+        </div>
+        <div class="header-controls">
+          <button id="dark-mode-toggle" class="icon-btn" aria-label="Toggle dark mode">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <div class="controls">
-      <input type="text" id="task-title" placeholder="Task Title" required>
-      <textarea id="task-description" placeholder="Task Description"></textarea>
-      <input type="date" id="task-deadline-date" required>
-      <input type="time" id="task-deadline-time" required>
-      <select id="task-priority">
-        <option value="High">High</option>
-        <option value="Medium">Medium</option>
-        <option value="Low">Low</option>
-      </select>
-      <button id="add-task">Add Task</button>
-    </div>
+    <main class="main-content">
+      <section class="task-input-section">
+        <div class="input-container">
+          <div class="input-group">
+            <label for="task-title" class="input-label">Task Title</label>
+            <input 
+              type="text" 
+              id="task-title" 
+              class="input-field"
+              placeholder="Enter your task..." 
+              maxlength="100"
+              required
+            >
+            <span class="input-feedback" id="title-feedback"></span>
+          </div>
 
-    <div class="filters">
-      <input type="text" id="search-bar" placeholder="Search tasks...">
-      <button id="sort-deadline">Sort by Deadline</button>
-      <button id="filter-completed">Show Completed</button>
-      <button id="filter-pending">Show Pending</button>
-    </div>
+          <div class="input-group">
+            <label for="task-description" class="input-label">Description</label>
+            <textarea 
+              id="task-description" 
+              class="input-field textarea-field"
+              placeholder="Add task details (optional)"
+              maxlength="300"
+              rows="3"
+            ></textarea>
+            <span class="char-counter" id="desc-counter">0/300</span>
+          </div>
 
-    <ul id="task-list"></ul>
+          <div class="input-row">
+            <div class="input-group">
+              <label for="task-deadline-date" class="input-label">Due Date</label>
+              <input 
+                type="date" 
+                id="task-deadline-date" 
+                class="input-field date-field"
+                required
+              >
+            </div>
+
+            <div class="input-group">
+              <label for="task-deadline-time" class="input-label">Due Time</label>
+              <input 
+                type="time" 
+                id="task-deadline-time" 
+                class="input-field time-field"
+                required
+              >
+            </div>
+
+            <div class="input-group">
+              <label for="task-priority" class="input-label">Priority</label>
+              <select id="task-priority" class="input-field select-field">
+                <option value="High">🔴 High</option>
+                <option value="Medium" selected>🟡 Medium</option>
+                <option value="Low">🟢 Low</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="add-task" class="btn btn-primary">
+            <span class="btn-icon">+</span>
+            Add Task
+          </button>
+        </div>
+      </section>
+
+      <section class="task-management-section">
+        <div class="controls-bar">
+          <div class="search-container">
+            <input 
+              type="text" 
+              id="search-bar" 
+              class="search-input"
+              placeholder="Search tasks..."
+            >
+            <span class="search-icon">🔍</span>
+          </div>
+
+          <div class="filter-controls">
+            <button id="sort-deadline" class="btn btn-secondary">
+              <span class="btn-icon">📅</span>
+              Sort by Date
+            </button>
+            <button id="sort-priority" class="btn btn-secondary">
+              <span class="btn-icon">⚡</span>
+              Sort by Priority
+            </button>
+          </div>
+
+          <div class="view-controls">
+            <button id="filter-all" class="filter-btn active" data-filter="all">All</button>
+            <button id="filter-pending" class="filter-btn" data-filter="pending">Pending</button>
+            <button id="filter-completed" class="filter-btn" data-filter="completed">Completed</button>
+          </div>
+        </div>
+
+        <div class="task-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="total-tasks">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="pending-tasks">0</span>
+            <span class="stat-label">Pending</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="completed-tasks">0</span>
+            <span class="stat-label">Completed</span>
+          </div>
+        </div>
+
+        <div class="task-list-container">
+          <div id="empty-state" class="empty-state">
+            <div class="empty-icon">📝</div>
+            <h3>No tasks yet</h3>
+            <p>Create your first task to get started!</p>
+          </div>
+          <ul id="task-list" class="task-list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>&copy; 2025 Smart To-Do List. Built with ❤️</p>
+        <div class="footer-actions">
+          <button id="clear-completed" class="btn btn-ghost">Clear Completed</button>
+          <button id="export-data" class="btn btn-ghost">Export Data</button>
+        </div>
+      </div>
+    </footer>
   </div>
 
-  <!-- Register Service Worker -->
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Loading your tasks...</p>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmation-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 id="modal-title">Confirm Action</h3>
+      <p id="modal-message">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="modal-confirm" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker Registered'))
-        .catch(err => console.error('Service Worker Registration Failed:', err));
+        .then(registration => {
+          console.log('Service Worker registered successfully:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
     }
   </script>
-
+  
   <script src="app.js"></script>
 </body>
 </html>
